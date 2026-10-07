@@ -1,12 +1,230 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Mon application</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Rank">
+<meta name="theme-color" content="#0c0f0e">
+<title>Rank</title>
+<style>
+:root{--bg:#0c0f0e;--card:#151a18;--line:#262e2b;--txt:#e9eeeb;--dim:#8a968f;--g:#3ecf8e}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:520px;margin:0 auto;padding:calc(env(safe-area-inset-top,0px) + 18px) 16px calc(env(safe-area-inset-bottom,0px) + 120px)}
+h1{font-size:28px;font-weight:800;margin:0 0 16px;letter-spacing:-.4px}
+h2{font-size:15px;font-weight:700;margin:26px 0 10px;color:var(--dim)}
+[hidden]{display:none!important}
+svg{display:block}
+.top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.top p{margin:0 0 4px;font-size:14px;color:var(--dim)}
+.top p:first-child{font-size:17px;font-weight:700;color:var(--txt)}
+.ic{background:none;border:0;color:var(--dim);padding:6px;cursor:pointer;border-radius:10px}
+.ic svg,.nav svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#radar{width:100%;height:auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+label{display:block;font-size:13px;color:var(--dim);margin:12px 0 5px}
+label:first-child{margin-top:0}
+input,select{width:100%;font:inherit;font-size:16px;color:var(--txt);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 12px}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--g);outline-offset:1px}
+.row{display:flex;gap:10px}.row>div{flex:1}
+button.save{width:100%;margin-top:18px;font:inherit;font-weight:700;font-size:16px;color:#04150d;background:var(--g);border:0;border-radius:10px;padding:13px;cursor:pointer}
+#err{color:#ff8b82;font-size:14px;margin:10px 0 0;min-height:1em}
+.item{display:flex;align-items:center;gap:12px;background:var(--card);border-left:5px solid var(--c);border-radius:10px;padding:12px 12px 12px 14px;margin-bottom:8px}
+.item .m{flex:1}.item b{display:block;font-size:16px}.item span{font-size:13px;color:var(--dim)}
+.item .r{font-weight:700;font-size:16px;text-align:right}
+.item button{background:none;border:0;color:var(--dim);font-size:22px;line-height:1;padding:4px 6px;cursor:pointer}
+.empty{color:var(--dim);font-size:15px;padding:8px 2px}
+.nav{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);max-width:496px;margin:0 auto;height:66px;display:grid;grid-template-columns:repeat(5,1fr);align-items:center;background:var(--card);border:1px solid var(--line);border-radius:33px}
+.nav button{background:none;border:0;color:var(--dim);display:grid;place-items:center;height:100%;cursor:pointer;font:inherit}
+.nav button.on{color:var(--g)}
+.nav .eur{font-size:24px;font-weight:700}
+.nav .home span{width:46px;height:46px;border-radius:50%;border:2px solid currentColor;display:grid;place-items:center;font-size:21px;font-weight:800}
+</style>
 </head>
-<body style="font-family: sans-serif; text-align: center; margin-top: 4rem;">
-  <h1>Neegy ! 🎉</h1>
-  <p>Mon premier site sur GitHub Pages.</p>
+<body>
+<main>
+<section id="v-accueil">
+  <div class="top">
+    <div><p id="s1"></p><p id="s2"></p></div>
+    <button class="ic" data-v="reglages" aria-label="Réglages"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9L7 7M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg></button>
+  </div>
+  <div id="radar"></div>
+</section>
+
+<section id="v-seances" hidden>
+  <h1>Noter une séance</h1>
+  <div class="card">
+    <label for="date">Date</label><input type="date" id="date">
+    <label for="ex">Exercice</label><select id="ex"></select>
+    <div id="f-lest" hidden><label for="kg">Poids ajouté (kg)</label><input type="number" id="kg" inputmode="decimal" min="0" step="0.5"></div>
+    <div id="f-reps" class="row" hidden>
+      <div><label for="series">Séries</label><input type="number" id="series" inputmode="numeric" min="1"></div>
+      <div><label for="reps">Reps par série</label><input type="number" id="reps" inputmode="numeric" min="1"></div>
+    </div>
+    <div id="f-temps" class="row" hidden>
+      <div><label for="min">Minutes</label><input type="number" id="min" inputmode="numeric" min="0"></div>
+      <div><label for="sec">Secondes</label><input type="number" id="sec" inputmode="numeric" min="0" max="59"></div>
+    </div>
+    <div id="f-cm" hidden><label for="cm">Résultat (cm)</label><input type="number" id="cm" inputmode="numeric" min="1"></div>
+    <button class="save" id="add">Enregistrer</button>
+    <p id="err" role="alert"></p>
+  </div>
+  <h2>Historique</h2>
+  <div id="list"></div>
+</section>
+
+<section id="v-bientot" hidden>
+  <h1 id="bt">Bientôt</h1>
+  <p class="empty">Cette page arrive dans une prochaine version.</p>
+</section>
+</main>
+
+<nav class="nav">
+  <button data-v="argent" aria-label="Argent"><span class="eur">€</span></button>
+  <button data-v="progression" aria-label="Progression"><svg viewBox="0 0 24 24"><path d="M5 20V10M12 20V4M19 20v-7"/></svg></button>
+  <button class="home" data-v="accueil" aria-label="Accueil"><span id="navg">–</span></button>
+  <button data-v="seances" aria-label="Séances"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg></button>
+  <button data-v="islam" aria-label="Islam"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg></button>
+</nav>
+
+<script>
+/* Seuils pour atteindre E, D, C, B, A, S. Modifiables ici.
+   t: lest = charge ajoutée estimée (kg) | reps = reps max en une série | temps = secondes (plus bas = mieux) | cm */
+const EX=[
+ {id:'tract_l',axe:'Force',nom:'Tractions lestées',t:'lest',s:[0,10,25,40,55,70]},
+ {id:'dips_l',axe:'Force',nom:'Dips lestés',t:'lest',s:[0,15,35,55,75,95]},
+ {id:'pompes_l',axe:'Force',nom:'Pompes lestées',t:'lest',s:[0,10,25,40,55,70]},
+ {id:'pompes',axe:'Contrôle',nom:'Pompes',t:'reps',s:[0,15,30,45,60,80]},
+ {id:'tract',axe:'Contrôle',nom:'Tractions',t:'reps',s:[0,5,10,15,20,30]},
+ {id:'dips',axe:'Contrôle',nom:'Dips',t:'reps',s:[0,10,20,30,40,50]},
+ {id:'v200',axe:'Vitesse',nom:'200 m',t:'temps',s:[90,50,40,34,30,26]},
+ {id:'v400',axe:'Vitesse',nom:'400 m',t:'temps',s:[200,110,90,75,65,55]},
+ {id:'e5',axe:'Endurance',nom:'5 km',t:'temps',s:[2400,1800,1560,1380,1200,1020]},
+ {id:'e10',axe:'Endurance',nom:'10 km',t:'temps',s:[5400,3720,3240,2820,2520,2160]},
+ {id:'dv',axe:'Explosivité',nom:'Détente verticale',t:'cm',s:[0,30,40,50,60,70]},
+ {id:'dh',axe:'Explosivité',nom:'Détente horizontale',t:'cm',s:[0,160,190,220,250,280]}
+];
+const AXES=['Force','Contrôle','Endurance','Explosivité','Vitesse'];
+const AC={Force:'#e5775f','Contrôle':'#5fa8d3',Endurance:'#4fb8b2','Explosivité':'#a78bfa',Vitesse:'#e3b341'};
+const GR='EDCBAS',KEY='seances';
+const $=id=>document.getElementById(id);
+let data=[];
+try{data=JSON.parse(localStorage.getItem(KEY))||[]}catch(e){data=[]}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){$('err').textContent="Impossible d'enregistrer sur cet appareil."}}
+
+/* ---------- Grades ---------- */
+function val(e,ex){return ex.t==='lest'?e.kg*(1+e.reps/30):ex.t==='reps'?e.reps:ex.t==='temps'?e.sec:e.cm}
+function level(v,ex){
+  const s=ex.s,inv=ex.t==='temps';let i=-1;
+  for(let k=0;k<6;k++) if(inv?v<=s[k]:v>=s[k]) i=k;
+  if(i<0)return 0; if(i===5)return 5;
+  return i+(inv?(s[i]-v)/(s[i]-s[i+1]):(v-s[i])/(s[i+1]-s[i]));
+}
+function levels(){
+  const L={};
+  AXES.forEach(a=>{
+    const ls=EX.filter(x=>x.axe===a).map(ex=>{
+      const es=data.filter(e=>e.ex===ex.id);
+      return es.length?Math.max(...es.map(e=>level(val(e,ex),ex))):null;
+    }).filter(x=>x!==null);
+    L[a]=ls.length?ls.reduce((p,c)=>p+c,0)/ls.length:0;
+  });
+  return L;
+}
+const letter=l=>GR[Math.min(5,Math.floor(l+1e-9))];
+
+/* ---------- Radar ---------- */
+function renderHome(){
+  const L=levels(),CX=180,CY=150,R=100,has=data.length>0;
+  const P=(k,r)=>{const a=(-90+72*k)*Math.PI/180;return[CX+r*Math.cos(a),CY+r*Math.sin(a)]};
+  const poly=pts=>pts.map(p=>p.map(n=>n.toFixed(1)).join(',')).join(' ');
+  let g='';
+  for(let j=1;j<=5;j++) g+=`<polygon points="${poly(AXES.map((_,k)=>P(k,R*j/5)))}" fill="none" stroke="#262e2b" stroke-width="${j===5?2:1}"/>`;
+  AXES.forEach((_,k)=>{const[x,y]=P(k,R);g+=`<line x1="${CX}" y1="${CY}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#262e2b"/>`});
+  g+=`<polygon points="${poly(AXES.map((a,k)=>P(k,R*L[a]/5)))}" fill="#3ecf8e" fill-opacity=".28" stroke="#3ecf8e" stroke-width="2.5" stroke-linejoin="round"/>`;
+  AXES.forEach((a,k)=>{
+    const[x,y]=P(k,R*L[a]/5);g+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.5" fill="${AC[a]}"/>`;
+    const[lx,ly]=P(k,R+24),dx=lx-CX,an=Math.abs(dx)<10?'middle':dx>0?'start':'end';
+    g+=`<text x="${lx.toFixed(1)}" y="${(ly-2).toFixed(1)}" text-anchor="${an}" font-size="13" fill="#e9eeeb">${a}</text>`;
+    g+=`<text x="${lx.toFixed(1)}" y="${(ly+15).toFixed(1)}" text-anchor="${an}" font-size="14" font-weight="800" fill="${AC[a]}">${has?letter(L[a]):'–'}</text>`;
+  });
+  const gl=AXES.reduce((p,a)=>p+L[a],0)/5,G=has?letter(gl):'–';
+  g+=`<text x="${CX}" y="${CY}" text-anchor="middle" dominant-baseline="central" font-size="52" font-weight="800" fill="#e9eeeb" stroke="#0c0f0e" stroke-width="5" paint-order="stroke">${G}</text>`;
+  $('radar').innerHTML=`<svg id="rsvg" viewBox="0 0 360 300" role="img" aria-label="Radar des 5 axes, grade global ${G}">${g}</svg>`;
+  $('navg').textContent=G;
+  const cut=new Date(Date.now()-6*864e5).toISOString().slice(0,10);
+  const w=new Set(data.filter(e=>e.date>=cut).map(e=>e.date)).size;
+  $('s1').textContent=w+(w>1?' séances':' séance')+' cette semaine';
+  const last=data.map(e=>e.date).sort().pop();
+  $('s2').textContent=last?'Dernière séance : '+fdate(last):'Aucune séance notée';
+}
+
+/* ---------- Navigation ---------- */
+const TITRES={argent:'Argent',islam:'Islam',progression:'Progression',reglages:'Réglages'};
+function show(v){
+  const page=(v==='accueil'||v==='seances')?v:'bientot';
+  ['accueil','seances','bientot'].forEach(p=>$('v-'+p).hidden=p!==page);
+  if(page==='bientot')$('bt').textContent=TITRES[v];
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  window.scrollTo(0,0);
+}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(b)show(b.dataset.v)});
+
+/* ---------- Saisie des séances ---------- */
+const axesSel=[...new Set(EX.map(e=>e.axe))];
+$('ex').innerHTML=axesSel.map(a=>`<optgroup label="${a}">`+EX.filter(e=>e.axe===a).map(e=>`<option value="${e.id}">${e.nom}</option>`).join('')+`</optgroup>`).join('');
+$('date').value=new Date().toISOString().slice(0,10);
+const cur=()=>EX.find(e=>e.id===$('ex').value);
+function showFields(){
+  const t=cur().t;
+  $('f-lest').hidden=t!=='lest';$('f-reps').hidden=!(t==='lest'||t==='reps');
+  $('f-temps').hidden=t!=='temps';$('f-cm').hidden=t!=='cm';$('err').textContent='';
+}
+$('ex').addEventListener('change',showFields);showFields();
+const num=id=>{const v=parseFloat($(id).value);return isNaN(v)?0:v};
+
+$('add').addEventListener('click',()=>{
+  const ex=cur(),e={id:Date.now(),date:$('date').value,ex:ex.id},er=m=>$('err').textContent=m;
+  if(!e.date)return er('Choisis une date.');
+  if(ex.t==='lest'||ex.t==='reps'){
+    e.series=num('series');e.reps=num('reps');if(ex.t==='lest')e.kg=num('kg');
+    if(e.series<1||e.reps<1)return er('Indique le nombre de séries et de reps.');
+    if(ex.t==='lest'&&e.kg<=0)return er('Indique le poids ajouté.');
+  }else if(ex.t==='temps'){
+    e.sec=num('min')*60+num('sec');if(e.sec<=0)return er('Indique ton temps.');
+  }else{
+    e.cm=num('cm');if(e.cm<=0)return er('Indique le résultat en cm.');
+  }
+  data.unshift(e);save();
+  ['kg','series','reps','min','sec','cm'].forEach(i=>$(i).value='');
+  er('');renderList();renderHome();
+});
+
+function fmt(e){
+  const ex=EX.find(x=>x.id===e.ex);
+  if(ex.t==='lest')return `+${e.kg} kg · ${e.series} × ${e.reps}`;
+  if(ex.t==='reps')return `${e.series} × ${e.reps}`;
+  if(ex.t==='temps')return `${Math.floor(e.sec/60)}:${String(Math.round(e.sec%60)).padStart(2,'0')}`;
+  return `${e.cm} cm`;
+}
+function fdate(d){const[y,m,j]=d.split('-');return `${j}/${m}/${y}`}
+function renderList(){
+  const L=$('list');
+  if(!data.length){L.innerHTML='<p class="empty">Aucune séance pour l\'instant. Enregistre ta première ci-dessus.</p>';return}
+  L.innerHTML=[...data].sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id).map(e=>{
+    const ex=EX.find(x=>x.id===e.ex);
+    return `<div class="item" style="--c:${AC[ex.axe]}"><div class="m"><b>${ex.nom}</b><span>${ex.axe} · ${fdate(e.date)}</span></div><div class="r">${fmt(e)}</div><button aria-label="Supprimer" data-id="${e.id}">×</button></div>`;
+  }).join('');
+}
+$('list').addEventListener('click',ev=>{
+  const b=ev.target.closest('button[data-id]');
+  if(!b||!confirm('Supprimer cette entrée ?'))return;
+  data=data.filter(x=>String(x.id)!==b.dataset.id);save();renderList();renderHome();
+});
+
+renderList();renderHome();show('accueil');
+</script>
 </body>
 </html>
